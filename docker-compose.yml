@@ -1,0 +1,49 @@
+version: "3.7"
+services:
+    app:
+        build:
+            args:
+                user: sammy
+                uid: 1001
+            context: ./
+            dockerfile: Dockerfile
+        image: sadewa
+        container_name: sadewa-app
+        restart: unless-stopped
+        working_dir: /var/www/
+        volumes:
+            - ./:/var/www
+        networks:
+            - sadewa
+
+    db:
+        image: mysql:8.0
+        container_name: sadewa-db
+        restart: unless-stopped
+        environment:
+            MYSQL_DATABASE: ${DB_DATABASE}
+            MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+            MYSQL_PASSWORD: ${DB_PASSWORD}
+            MYSQL_USER: ${DB_USERNAME}
+            SERVICE_TAGS: dev
+            SERVICE_NAME: mysql
+        volumes:
+            - ./docker-compose/mysql:/docker-entrypoint-initdb.d
+        networks:
+            - sadewa
+
+    nginx:
+        image: nginx:alpine
+        container_name: sadewa-nginx
+        restart: unless-stopped
+        ports:
+            - 8000:80
+        volumes:
+            - ./:/var/www
+            - ./docker-compose/nginx:/etc/nginx/conf.d/
+        networks:
+            - sadewa
+
+networks:
+    sadewa:
+        driver: bridge
